@@ -33,11 +33,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($password, $row['password'])) {
             $_SESSION['loggedin'] = true;
             $_SESSION['role'] = $row['role'];
+            $_SESSION['firstname'] = $row['firstname']; // Store first name in session
 
             if ($row['role'] == 'admin') {
                 header("Location: admin.html");
             } else {
-                header("Location: welcome.html");
+                header("Location: Welcome.html");
             }
             exit();
         } else {

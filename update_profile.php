@@ -1,9 +1,11 @@
 <?php
 session_start();
+
+// Database credentials
 $servername = "localhost";
-$username = "root";  // Adjust if necessary
-$password = "";  // Adjust if necessary
-$dbname = "bus_commuter";
+$username = "root";  // Replace with your MySQL username
+$password = "";      // Replace with your MySQL password
+$dbname = "your_database_name";  // Replace with your database name
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -13,70 +15,36 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$user_id = $_SESSION['user_id'];  // Assuming user_id is stored in session after login
+// Assume you have a logged in user and their ID is stored in $_SESSION['user_id']
+$user_id = $_SESSION['user_id'];  // Adjust this according to your session handling
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $phone_number = $_POST['phone_number'];
-    $email = $_POST['email'];
+// Prepare and execute query to fetch user data
+$stmt = $conn->prepare("SELECT name, phone_number, email, profile_photo FROM users WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
-    // Handle file upload if profile photo is updated
-    if (!empty($_FILES["profile_photo"]["name"])) {
-        $target_dir = "uploads/";
-        $target_file = $target_dir . basename($_FILES["profile_photo"]["name"]);
-        $uploadOk = 1;
-        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+// Check if user exists
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
 
-        // Check if image file is a actual image or fake image
-        $check = getimagesize($_FILES["profile_photo"]["tmp_name"]);
-        if ($check !== false) {
-            $uploadOk = 1;
-        } else {
-            echo "File is not an image.";
-            $uploadOk = 0;
-        }
+    // Construct JSON response
+    $response = [
+        'name' => $row['name'],
+        'phone_number' => $row['phone_number'],
+        'email' => $row['email'],
+        'profile_photo' => $row['profile_photo']
+    ];
 
-        // Check file size
-        if ($_FILES["profile_photo"]["size"] > 500000) {
-            echo "Sorry, your file is too large.";
-            $uploadOk = 0;
-        }
-
-        // Allow certain file formats
-        if ($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg") {
-            echo "Sorry, only JPG, JPEG, & PNG files are allowed.";
-            $uploadOk = 0;
-        }
-
-        // Check if $uploadOk is set to 0 by an error
-        if ($uploadOk == 0) {
-            echo "Sorry, your file was not uploaded.";
-        } else {
-            if (move_uploaded_file($_FILES["profile_photo"]["tmp_name"], $target_file)) {
-                $profile_photo = $target_file;
-                // Update profile with photo
-                $stmt = $conn->prepare("UPDATE users SET name = ?, phone_number = ?, email = ?, profile_photo = ? WHERE user_id = ?");
-                $stmt->bind_param("ssssi", $name, $phone_number, $email, $profile_photo, $user_id);
-            } else {
-                echo "Sorry, there was an error uploading your file.";
-            }
-        }
-    } else {
-        // Update profile without photo
-        $stmt = $conn->prepare("UPDATE users SET name = ?, phone_number = ?, email = ? WHERE user_id = ?");
-        $stmt->bind_param("sssi", $name, $phone_number, $email, $user_id);
-    }
-
-    if ($stmt->execute()) {
-        echo "Profile updated successfully.";
-        header("Location: welcome.html");
-        exit();
-    } else {
-        echo "Error: " . $stmt->error;
-    }
-
-    $stmt->close();
+    // Send JSON response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+} else {
+    // Handle case where user data is not found
+    http_response_code(404); // Not Found
+    echo json_encode(['error' => 'User data not found']);
 }
 
+$stmt->close();
 $conn->close();
 ?>

@@ -16,7 +16,7 @@
             height: 100vh;
         }
         .container {
-            width: 300px;
+            width: 400px;
             padding: 20px;
             background-color: #1e1e1e;
             border-radius: 10px;
@@ -48,20 +48,24 @@
         .container button:hover {
             background-color: #3700b3;
         }
+        .seat-booked {
+            background-color: #444 !important;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Make a Trip</h2>
-        <form action="make_trip_action.php" method="post">
-            <label for="name">name:</label>
+        <form id="tripForm" action="book_trip_action.php" method="post">
+            <label for="name">Name:</label>
             <input type="text" id="name" name="name" required>
 
-            <label for="car_preference">car_preference:</label>
+            <label for="route">Car Preference:</label>
             <select id="route" name="route" onchange="updateRoute()" required>
                 <option value="">--Select a Car Preference--</option>
-                <option value="michael">michael</option>
-                <option value="chumba">chumba</option>
+                <option value="michael">Michael</option>
+                <option value="chumba">Chumba</option>
             </select>
 
             <label for="location">Location:</label>
@@ -69,27 +73,27 @@
                 <option value="">--Select a Location--</option>
             </select>
 
-            <label for="pickup_stage">pickup_stage:</label>
+            <label for="pickup_stage">Pickup Stage:</label>
             <input type="text" id="pickup_stage" name="pickup_stage" required>
 
-            <label for="seat_number">seat_number:</label>
+            <label for="seat_number">Seat Number:</label>
             <select id="seat_number" name="seat_number" required>
                 <option value="">--Select a Seat--</option>
             </select>
 
-            <label for="phone_number">phone_number:</label>
+            <label for="phone_number">Phone Number:</label>
             <input type="tel" id="phone_number" name="phone_number" required>
 
-            <label for="paid_amount">paid_amount:</label>
+            <label for="paid_amount">Paid Amount:</label>
             <input type="number" id="paid_amount" name="paid_amount" required readonly>
 
-            <label for="date">date:</label>
+            <label for="date">Date:</label>
             <input type="date" id="date" name="date" required>
 
-            <label for="time">time:</label>
+            <label for="time">Time:</label>
             <input type="time" id="time" name="time" required>
 
-            <button type="submit">Make Trip</button>
+            <button type="button" onclick="makePayment()">Make Payment</button>
         </form>
     </div>
 
@@ -135,10 +139,8 @@
             const selectedRoute = document.getElementById("route").value;
             const locationSelect = document.getElementById("location");
 
-            // Clear the location dropdown
             locationSelect.innerHTML = '<option value="">--Select a Location--</option>';
 
-            // Populate the location dropdown based on the selected route
             if (selectedRoute) {
                 for (const location in prices[selectedRoute]) {
                     const option = document.createElement("option");
@@ -149,6 +151,7 @@
             }
 
             updatePrice();
+            updateSeatNumbers();
         }
 
         function updatePrice() {
@@ -164,25 +167,9 @@
         }
 
         function fetchBookedSeats(route, location) {
-            // Example of an AJAX call to fetch booked seats. Replace with actual AJAX call.
-            return new Promise((resolve) => {
-                // Simulate a server response with some booked seats
-                const bookedSeats = {
-                    "michael": {
-                        "kinka stage": [1, 2, 3],
-                        "benedicta": [4, 5, 6]
-                        // Add more locations and booked seats
-                    },
-                    "chumba": {
-                        "kinka stage": [7, 8, 9],
-                        "benedicta": [10, 11, 12]
-                        // Add more locations and booked seats
-                    }
-                };
-                setTimeout(() => {
-                    resolve(bookedSeats[route][location] || []);
-                }, 1000);
-            });
+            return fetch(`fetch_booked_seats.php?route=${route}&location=${location}`)
+                .then(response => response.json())
+                .then(data => data);
         }
 
         function updateSeatNumbers() {
@@ -190,25 +177,24 @@
             const location = document.getElementById("location").value;
             const seatNumberSelect = document.getElementById("seat_number");
 
-            // Clear the seat number dropdown
             seatNumberSelect.innerHTML = '<option value="">--Select a Seat--</option>';
 
             if (route && location) {
                 fetchBookedSeats(route, location).then(bookedSeats => {
-                    const totalSeats = 20; // Example: total number of seats in the vehicle
-                    for (let i = 1; i <= totalSeats; i++) {
-                        if (!bookedSeats.includes(i)) {
-                            const option = document.createElement("option");
-                            option.value = i;
-                            option.text = i;
-                            seatNumberSelect.appendChild(option);
+                    for (let i = 1; i <= 14; i++) {
+                        const option = document.createElement("option");
+                        option.value = i;
+                        option.text = i;
+                        if (bookedSeats.includes(i.toString())) { // assuming seat numbers are stored as strings in DB
+                            option.classList.add('seat-booked');
+                            option.disabled = true;
                         }
+                        seatNumberSelect.appendChild(option);
                     }
                 });
             }
         }
 
-        // Event listeners to update seat numbers
         document.getElementById("route").addEventListener("change", updateSeatNumbers);
         document.getElementById("location").addEventListener("change", updateSeatNumbers);
 
@@ -222,6 +208,26 @@
             const minDate = `${year}-${month}-${day}`;
             dateInput.setAttribute('min', minDate);
         };
+
+        function makePayment() {
+            const form = document.getElementById("tripForm");
+            const name = document.getElementById("name").value;
+            const route = document.getElementById("route").value;
+            const location = document.getElementById("location").value;
+            const pickupStage = document.getElementById("pickup_stage").value;
+            const seatNumber = document.getElementById("seat_number").value;
+            const phoneNumber = document.getElementById("phone_number").value;
+            const paidAmount = document.getElementById("paid_amount").value;
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+
+            if (name && route && location && pickupStage && seatNumber && phoneNumber && paidAmount && date && time) {
+                alert("Payment successful!"); // Placeholder for actual payment processing
+                form.submit(); // Submitting the form after successful payment
+            } else {
+                alert("Please fill all fields before making a payment.");
+            }
+        }
     </script>
 </body>
 </html>

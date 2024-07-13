@@ -52,44 +52,27 @@
 </head>
 <body>
     <div class="container">
-        <h2>Make a Trip</h2>
-        <form action="make_trip_action.php" method="post">
+        <h2>Book a Trip</h2>
+        <form action="book_trip_action.php" method="post">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required>
-
             <label for="location">Location:</label>
             <input type="text" id="location" name="location" required>
-
+            <label for="price">Price:</label>
+            <input type="number" id="price" name="price" required>
             <label for="date">Date:</label>
             <input type="date" id="date" name="date" required>
-
             <label for="time">Time:</label>
             <input type="time" id="time" name="time" required>
-
             <label for="payment">Means of Payment:</label>
             <select id="payment" name="payment" required>
-                <option value="">--Select Payment Method--</option>
                 <option value="cash">Cash</option>
-                <option value="mpesa">M-Pesa</option>
+                <option value="mpesa">Mpesa</option>
             </select>
-
-            <label for="pickup_stage">Stage of Pickup:</label>
-            <input type="text" id="pickup_stage" name="pickup_stage" required>
-
-            <button type="submit">Make Trip</button>
+            <label for="pickup">Stage of Pickup:</label>
+            <input type="text" id="pickup" name="pickup" required>
+            <button type="submit">Book Trip</button>
         </form>
     </div>
-
-    <script>
-        window.onload = function() {
-            const dateInput = document.getElementById('date');
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = ('0' + (today.getMonth() + 1)).slice(-2);
-            const day = ('0' + today.getDate()).slice(-2);
-            const minDate = `${year}-${month}-${day}`;
-            dateInput.setAttribute('min', minDate);
-        };
-    </script>
 </body>
 </html>

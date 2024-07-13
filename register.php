@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
 $username = "root";  // Adjust if necessary
-$password = "";  // Adjust if necessary
+$password = "Mech2anism";  // Adjust if necessary
 $dbname = "bus_commuter";
 
 
